@@ -6,14 +6,16 @@ description: The `Event` class represents a single NOSTR event.
 The `Event` class represents a single NOSTR event.
 
 ## Attributes
-- `id` (`str`): Unique identifier of the event, derived from event fields.
-- `pubkey` (`str`): Public key of the event creator.
-- `created_at` (`int`): Unix timestamp for when the event was created.
-- `kind` (`int`): Integer representing the type of event.
-- `tags` (`List[List[str]]`): List of tag lists (e.g., metadata).
-- `content` (`str`): Text or JSON content of the event.
-- `sig` (`str`): Cryptographic signature of the event.
-- `content_obj` (`dict` or `None`): Parsed JSON if `content` is valid JSON, otherwise `None`.
+| Name           | Type                | Description                                                             |
+|----------------|---------------------|-------------------------------------------------------------------------|
+| `id`           | `str`               | Unique identifier of the event, derived from event fields.              |
+| `pubkey`       | `str`               | Public key of the event creator.                                        |
+| `created_at`   | `int`               | Unix timestamp for when the event was created.                          |
+| `kind`         | `int`               | Integer representing the type of event.                                 |
+| `tags`         | `List[List[str]]`   | List of tag lists (e.g., metadata).                                     |
+| `content`      | `str`               | Text or JSON content of the event.                                      |
+| `sig`          | `str`               | Cryptographic signature of the event.                                   |
+| `content_obj`  | `dict` or `None`    | Parsed JSON if `content` is valid JSON, otherwise `None`.               |
 ---
 
 ## Methods
@@ -48,6 +50,8 @@ Initialize an Event object.
 
 ### `__repr__`
 Return a string representation of the Event object.
+#### Parameters
+- `None`
 #### Example
 ```python
 >>> event = Event(id, pubkey, created_at, kind, tags, content, sig)
@@ -56,6 +60,8 @@ Event(id=0x123, pubkey=0x123, created_at=1612137600, kind=0, tags=[["tag1", "tag
 ```
 #### Returns
 - `str`: String representation of the Event object.
+#### Raises
+- `None`
 ---
 
 ### `from_dict`
@@ -77,6 +83,8 @@ Event(id=0x123, pubkey=0x123, created_at=1612137600, kind=0, tags=[["tag1", "tag
 
 ### `to_dict`
 Return a dictionary representation of the Event object.
+#### Parameters
+- `None`
 #### Example
 ```python
 >>> event = Event(id, pubkey, created_at, kind, tags, content, sig)
@@ -85,4 +93,6 @@ Return a dictionary representation of the Event object.
 ```
 #### Returns
 - `dict`: Dictionary representation of the Event object.
+#### Raises
+- `None`
 ---
