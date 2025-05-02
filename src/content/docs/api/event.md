@@ -1,9 +1,9 @@
 ---
 title: Event
-description: The `Event` class epresents a single NOSTR event.
+description: The `Event` class represents a single NOSTR event.
 ---
 
-The `Event` class epresents a single NOSTR event.
+The `Event` class represents a single NOSTR event.
 
 ## Attributes
 - `id` (`str`): Unique identifier of the event, derived from event fields.
