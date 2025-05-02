@@ -1,0 +1,46 @@
+// @ts-check
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+
+// https://astro.build/config
+export default defineConfig({
+	integrations: [
+		starlight({
+			title: 'Bigbrotr',
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/VincenzoImp/bigbrotr' }],
+			sidebar: [
+				{
+					label: 'Guides',
+					items: [
+						{ label: 'Getting Started', slug: 'guides/getting-started' },
+					],
+				},
+				{
+					label: 'Database',
+					items: [
+						{ label: 'Tables', slug: 'database/tables' },
+						{ label: 'Functions', slug: 'database/functions' },
+					],
+				},
+				{
+					label: 'API',
+					items: [
+						{ label: 'Bigbrotr', slug: 'api/bigbrotr' },
+						{ label: 'Event', slug: 'api/event' },
+						{ label: 'Relay', slug: 'api/relay' },
+						{ label: 'Relay Metadata', slug: 'api/relay-metadata' },
+						{ label: 'Utils', slug: 'api/utils' },
+					],
+				},
+				{
+					label: 'Deamons',
+					items: [
+						{ label: 'Bigbrotr Database', slug: 'deamons/bigbrotr-database' },
+						{ label: 'Events Syncronizer', slug: 'deamons/events-syncronizer' },
+						{ label: 'Relays Monitor', slug: 'deamons/relays-monitor' },
+					],
+				}
+			],
+		}),
+	],
+});
