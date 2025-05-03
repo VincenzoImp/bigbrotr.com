@@ -3,7 +3,7 @@ title: Getting Started
 description: A step-by-step guide to set up your Bigbrotr instance.
 ---
 
-This guide helps you quickly set up the **BigBrotr** instance using Docker Compose, including PostgreSQL and pgAdmin.
+This guide helps you quickly set up the **Bigbrotr** instance using Docker Compose, including PostgreSQL and pgAdmin.
 
 ## 1. Clone the Repository
 
