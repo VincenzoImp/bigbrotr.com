@@ -24,7 +24,7 @@ Initialize a Relay object.
 >>> relay = Relay(url)
 ```
 #### Returns
-- `None`
+- `Relay`: Relay object initialized with the provided parameters.
 #### Raises
 - `TypeError`: If `url` is not a string.
 - `ValueError`: If `url` does not start with `"wss://"` or `"ws://"`.
@@ -75,7 +75,7 @@ Return a dictionary representation of the Relay object.
 {'url': 'wss://relay.nostr.com', 'network': 'clearnet'}
 ```
 #### Returns
-- `dict`: A dictionary containing the `url` and `network`.
+- `dict`: Dictionary representation of the Relay object.
 #### Raises
 - `None`
 ---
