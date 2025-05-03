@@ -7,7 +7,7 @@ This guide helps you quickly set up the **BigBrotr** instance using Docker Compo
 
 ## 1. Clone the Repository
 
-Download the BigBrotr project to your local machine:
+Download the BigBrotr repository to your local machine:
 
 ```bash
 git clone https://github.com/VincenzoImp/bigbrotr.git
