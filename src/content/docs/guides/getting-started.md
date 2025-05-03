@@ -5,7 +5,7 @@ description: A step-by-step guide to set up your Bigbrotr instance.
 
 This guide helps you quickly set up the **BigBrotr** instance using Docker Compose, including PostgreSQL and pgAdmin.
 
-## 1. 🔁 Clone the Repository
+## 1. Clone the Repository
 
 Download the BigBrotr project to your local machine:
 
@@ -16,7 +16,7 @@ cd bigbrotr
 
 ---
 
-## 2. ⚙️ Create the `.env` File
+## 2. Create the `.env` File
 
 Copy the example environment file:
 
@@ -28,7 +28,7 @@ cp .env.example .env
 
 ---
 
-## 3. 🗂️ Create the Data Directory
+## 3. Create the Data Directory
 
 Make sure the data directory exists, where PostgreSQL will store persistent data:
 
@@ -40,7 +40,7 @@ mkdir -p data
 
 ---
 
-## 4. 🐳 Start the Containers
+## 4. Start the Containers
 
 Run Docker Compose using the `.env` file:
 
@@ -57,7 +57,7 @@ docker compose --env-file .env up -d
 
 ---
 
-## 5. 🛑 Stop the Containers
+## 5. Stop the Containers
 
 To shut everything down:
 
