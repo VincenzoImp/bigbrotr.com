@@ -21,7 +21,7 @@ cd bigbrotr
 Copy the example environment file:
 
 ```bash
-cp .env.example .env
+cp env.example .env
 ```
 
 🔧 *You can edit `.env` to customize credentials, ports, or file paths as needed.*
