@@ -45,6 +45,7 @@ Initialize an Event object.
 - `Event`: Event object initialized with the provided parameters.
 #### Raises
 - `TypeError`: If any input is of the wrong type.
+- `ValueError`: If kind is not between 0 and 65535.
 - `ValueError`: If the event ID or signature is invalid.
 ---
 
