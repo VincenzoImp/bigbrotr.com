@@ -3,7 +3,7 @@ title: Getting Started
 description: A step-by-step guide to set up your Bigbrotr instance.
 ---
 
-This guide helps you quickly set up the **Bigbrotr** instance using Docker Compose, including PostgreSQL and pgAdmin.
+This guide helps you quickly set up the **Bigbrotr** instance using Docker Compose, including PostgreSQL, pgAdmin, and additional services.
 
 ## 1. Clone the Repository
 
@@ -24,91 +24,113 @@ Copy the example environment file:
 cp env.example .env
 ```
 
-🔧 *You can edit `.env` to customize credentials, ports, or file paths as needed.*
+🔧 *You can edit `.env` to customize credentials, ports, file paths, and service parameters as needed.*
 
 #### Explanation of `.env` File
 
-The `.env` file contains environment variables that will configure your Docker containers for PostgreSQL and pgAdmin. Here’s a breakdown of the variables in `.env`:
+The `.env` file contains environment variables to configure your Docker containers and Bigbrotr services. Here’s a breakdown:
 
 ```env
-# Database Host
-DB_HOST=localhost
+# Ports
+DB_PORT=5432
+PGADMIN_PORT=8080
 
-# Database Configuration
+# Nostr keypair
+SECRET_KEY=
+PUBLIC_KEY=
+
+# Database configuration
 POSTGRES_USER=admin
 POSTGRES_PASSWORD=admin
 POSTGRES_DB=bigbrotr
 POSTGRES_DB_DATA_PATH=./data
 POSTGRES_DB_INIT_PATH=./init.sql
 
-# Ports
-DB_PORT=5432
-PGADMIN_PORT=8080
-
-# pgAdmin Configuration
+# pgAdmin configuration
 PGADMIN_DEFAULT_EMAIL=admin@admin.com
 PGADMIN_DEFAULT_PASSWORD=admin
+
+# Initializer configuration
+RELAYS_SEED_PATH=.relays_seed.txt
+
+# Monitor configuration
+MONITOR_FREQUENCY_HOUR=8
+MONITOR_NUM_CORES=2
+MONITOR_CHUNK_SIZE=100
+MONITOR_REQUESTS_PER_CORE=25
+MONITOR_REQUEST_TIMEOUT=20
+
+# Syncronizer configuration
+SYNCRONIZER_NUM_CORES=4
+SYNCRONIZER_CHUNK_SIZE=200
+SYNCRONIZER_REQUESTS_PER_CORE=25
+SYNCRONIZER_REQUEST_TIMEOUT=20
 ```
 
-- **DB_HOST**: This is the hostname for your database. In most setups, this would be `localhost` unless you're setting up a multi-host environment.
-- **POSTGRES_USER**: The username for the PostgreSQL instance.
-- **POSTGRES_PASSWORD**: The password for the PostgreSQL user.
-- **POSTGRES_DB**: The name of the default database to create.
-- **POSTGRES_DB_DATA_PATH**: Path to the local directory where PostgreSQL will store its data files. This is set to `./data` by default.
-- **POSTGRES_DB_INIT_PATH**: Path to an optional SQL file that can be used to initialize the database. The default path is `./init.sql`.
-
-🔧 *You can customize the values of these variables to fit your needs. For instance, change the `POSTGRES_USER` and `POSTGRES_PASSWORD` to more secure values, and if you're running PostgreSQL on a different host or port, update `DB_HOST` and `DB_PORT` accordingly.*
+- **DB_PORT**: Port on your host to expose PostgreSQL (maps to container port 5432).
+- **PGADMIN_PORT**: Port on your host to access pgAdmin (maps to container port 80).
+- **SECRET_KEY / PUBLIC_KEY**: Your Nostr keypair credentials.
+- **POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB**: Credentials and database name for PostgreSQL.
+- **POSTGRES_DB_DATA_PATH**: Local directory for persistent PostgreSQL data.
+- **POSTGRES_DB_INIT_PATH**: Optional SQL file for initializing the database.
+- **PGADMIN_DEFAULT_EMAIL / PGADMIN_DEFAULT_PASSWORD**: Credentials for logging into pgAdmin.
+- **RELAYS_SEED_PATH**: Path to relays seed file used by the initializer service.
+- **Monitor and Syncronizer variables**: Configure performance and behavior of Bigbrotr's monitor and synchronizer services.
 
 ---
 
-## 3. Create the Data Directory
+## 3. Start the Containers
 
-Make sure the data directory exists, where PostgreSQL will store persistent data:
-
-```bash
-mkdir -p data
-```
-
-💡 *Optionally, you can add SQL commands to `init.sql` to initialize the database.*
-
----
-
-## 4. Start the Containers
-
-Run Docker Compose using the `.env` file:
+Launch the full stack using Docker Compose with your `.env` file:
 
 ```bash
 docker compose --env-file .env up -d
 ```
 
-✔️ This will launch:
+✔️ This will start:
 
-- **PostgreSQL** (`bigbrotr_db`) on the port defined in `.env` (default: `5432`)
-- **pgAdmin** (`bigbrotr_pgadmin`) accessible at [http://localhost:8080](http://localhost:8080)
+- **PostgreSQL** (`bigbrotr_database`) on `${DB_PORT}` (default: `5432`)
+- **pgAdmin** (`bigbrotr_pgadmin`) accessible at [http://localhost:${PGADMIN_PORT}](http://localhost:8080)
+- **Tor proxy** (`bigbrotr_torproxy`)
+- **Initializer** (`bigbrotr_initializer`) - initializes database from seed
+- **Monitor** (`bigbrotr_monitor`) - main monitoring service
+- **Syncronizer** (`bigbrotr_syncronizer`) - synchronizes data with relays
 
-👤 *Log in to pgAdmin using the email and password from your `.env` file.*
+👤 *Log into pgAdmin using the email and password from your `.env`.*
 
-#### Docker Compose Breakdown
+---
 
-Here’s how the Docker Compose file works in conjunction with the `.env` file:
+## 4. Stop the Containers
+
+To stop all running containers:
+
+```bash
+docker compose down
+```
+
+---
+
+## Docker Compose Overview
+
+Here is the relevant `docker-compose.yml` snippet used:
 
 ```yaml
 services:
 
-  db:
+  database:
     image: postgres:latest
-    container_name: bigbrotr_db
+    container_name: bigbrotr_database
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - ${DB_PORT}:5432
     volumes:
       - ${POSTGRES_DB_DATA_PATH}:/var/lib/postgresql/data
       - ${POSTGRES_DB_INIT_PATH}:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - bigbrotr_network
+      - network
     restart: unless-stopped
 
   pgadmin:
@@ -118,45 +140,92 @@ services:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - "${PGADMIN_PORT}:80"
+      - ${PGADMIN_PORT}:80
     networks:
-      - bigbrotr_network
+      - network
     depends_on:
-      - db
+      - database
+    restart: unless-stopped
+
+  torproxy:
+    image: dperson/torproxy
+    container_name: bigbrotr_torproxy
+    restart: unless-stopped
+    networks:
+      - network
+
+  initializer:
+    build:
+      context: .
+      dockerfile: dockerfiles/initializer
+    container_name: bigbrotr_initializer
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=5432
+      - RELAYS_SEED_PATH=relays_seed.txt
+    volumes:
+      - ${RELAYS_SEED_PATH}:/app/relays_seed.txt
+    depends_on:
+      - database
+    networks:
+      - network
+    restart: no
+
+  monitor:
+    build:
+      context: .
+      dockerfile: dockerfiles/monitor
+    container_name: bigbrotr_monitor
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=5432
+      - TORPROXY_HOST=torproxy
+      - TORPROXY_PORT=9050
+      - MONITOR_FREQUENCY_HOUR=${MONITOR_FREQUENCY_HOUR}
+      - MONITOR_NUM_CORES=${MONITOR_NUM_CORES}
+      - MONITOR_CHUNK_SIZE=${MONITOR_CHUNK_SIZE}
+      - MONITOR_REQUESTS_PER_CORE=${MONITOR_REQUESTS_PER_CORE}
+      - MONITOR_REQUEST_TIMEOUT=${MONITOR_REQUEST_TIMEOUT}
+      - SECRET_KEY=${SECRET_KEY}
+      - PUBLIC_KEY=${PUBLIC_KEY}
+    depends_on:
+      - database
+      - torproxy
+    networks:
+      - network
+    restart: unless-stopped
+
+  syncronizer:
+    build:
+      context: .
+      dockerfile: dockerfiles/syncronizer
+    container_name: bigbrotr_syncronizer
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=5432
+      - TORPROXY_HOST=torproxy
+      - TORPROXY_PORT=9050
+      - SYNCRONIZER_NUM_CORES=${SYNCRONIZER_NUM_CORES}
+      - SYNCRONIZER_CHUNK_SIZE=${SYNCRONIZER_CHUNK_SIZE}
+      - SYNCRONIZER_REQUESTS_PER_CORE=${SYNCRONIZER_REQUESTS_PER_CORE}
+      - SYNCRONIZER_REQUEST_TIMEOUT=${SYNCRONIZER_REQUEST_TIMEOUT}
+    depends_on:
+      - database
+      - torproxy
+    networks:
+      - network
     restart: unless-stopped
 
 networks:
-  bigbrotr_network:
+  network:
     driver: bridge
-
-volumes:
-  bigbrotr_data:
-    driver: local
 ```
-
-- The `db` service uses the official PostgreSQL image.
-- It pulls the environment variables directly from your `.env` file for configuration (`POSTGRES_USER`, `POSTGRES_PASSWORD`, etc.).
-- It maps the port `DB_PORT` and mounts two volumes:
-    - `${POSTGRES_DB_DATA_PATH}` maps to PostgreSQL's data storage directory.
-    - `${POSTGRES_DB_INIT_PATH}` maps to an initialization SQL script.
-- The `pgadmin` service uses the `dpage/pgadmin4` image.
-- It reads the environment variables from the `.env` file (`PGADMIN_DEFAULT_EMAIL`, `PGADMIN_DEFAULT_PASSWORD`).
-- It maps the `PGADMIN_PORT` to port `80` inside the container, allowing you to access pgAdmin through `http://localhost:8080`.
-
----
-
-## 5. Stop the Containers
-
-To shut everything down:
-
-```bash
-docker compose down
-```
-
-❗ To remove containers **and** volumes (⚠️ this will delete database data):
-
-```bash
-docker compose down -v
-```
-
----
