@@ -42,41 +42,6 @@ The synchronization component that guarantees a complete and up-to-date archive:
 
 ---
 
-## 📈 Database Schema
-
-```yaml
-events:
-  - id (PK)
-  - pubkey
-  - kind
-  - created_at
-  - content
-  - tags (JSONB)
-  - sig
-
-events_relays:
-  - event_id (FK)
-  - relay_url (FK)
-  - seen_at
-
-relays:
-  - url (PK)
-  - network (clearnet/tor)
-  - inserted_at
-
-relay_metadata:
-  - relay_url (FK)
-  - generated_at
-  - connection_success, nip11_success
-  - openable, readable, writable
-  - rtt_open, rtt_read, rtt_write
-  - name, description, banner, icon
-  - pubkey, contact, software, version
-  - supported_nips (JSONB)
-  - privacy_policy, terms_of_service
-  - limitations, extra_fields (JSONB)
-```
-
 ## 🧠 Design Principles
 
 - **Resilience**: data recovery and incremental sync mechanisms to guarantee completeness even during outages or offline relays.

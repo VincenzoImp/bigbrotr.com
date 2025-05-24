@@ -14,13 +14,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Getting Started', slug: 'guides/getting-started' },
 						{ label: 'System Architecture', slug: 'guides/system-architecture' },
-					],
-				},
-				{
-					label: 'Database',
-					items: [
-						{ label: 'Tables', slug: 'database/tables' },
-						{ label: 'Functions', slug: 'database/functions' },
+						{ label: 'Database Schema', slug: 'guides/database-schema' },
 					],
 				},
 				{
