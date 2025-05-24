@@ -67,14 +67,14 @@ SYNCRONIZER_REQUESTS_PER_CORE=25
 SYNCRONIZER_REQUEST_TIMEOUT=20
 ```
 
-- **DB_PORT**: Port on your host to expose PostgreSQL (maps to container port 5432).
-- **PGADMIN_PORT**: Port on your host to access pgAdmin (maps to container port 80).
-- **SECRET_KEY / PUBLIC_KEY**: Your Nostr keypair credentials.
-- **POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB**: Credentials and database name for PostgreSQL.
-- **POSTGRES_DB_DATA_PATH**: Local directory for persistent PostgreSQL data.
-- **POSTGRES_DB_INIT_PATH**: Optional SQL file for initializing the database.
-- **PGADMIN_DEFAULT_EMAIL / PGADMIN_DEFAULT_PASSWORD**: Credentials for logging into pgAdmin.
-- **RELAYS_SEED_PATH**: Path to relays seed file used by the initializer service.
+- `DB_PORT`: Port on your host to expose PostgreSQL (maps to container port 5432).
+- `PGADMIN_PORT`: Port on your host to access pgAdmin (maps to container port 80).
+- `SECRET_KEY` / `PUBLIC_KEY`: Your Nostr keypair credentials.
+- `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: Credentials and database name for PostgreSQL.
+- `POSTGRES_DB_DATA_PATH`: Local directory for persistent PostgreSQL data.
+- `POSTGRES_DB_INIT_PATH`: Optional SQL file for initializing the database.
+- `PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD`: Credentials for logging into pgAdmin.
+- `RELAYS_SEED_PATH`: Path to relays seed file used by the initializer service.
 - **Monitor and Syncronizer variables**: Configure performance and behavior of Bigbrotr's monitor and synchronizer services.
 
 ---
