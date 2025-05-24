@@ -26,14 +26,6 @@ export default defineConfig({
 						{ label: 'Relay Metadata', slug: 'api/relay-metadata' },
 						{ label: 'Utils', slug: 'api/utils' },
 					],
-				},
-				{
-					label: 'Deamons',
-					items: [
-						{ label: 'Bigbrotr Database', slug: 'deamons/bigbrotr-database' },
-						{ label: 'Events Syncronizer', slug: 'deamons/events-syncronizer' },
-						{ label: 'Relays Monitor', slug: 'deamons/relays-monitor' },
-					],
 				}
 			],
 		}),
