@@ -26,56 +26,54 @@ cp env.example .env
 
 🔧 *You can edit `.env` to customize credentials, ports, file paths, and service parameters as needed.*
 
-#### Explanation of `.env` File
+### Explanation of `.env` File
 
 The `.env` file contains environment variables to configure your Docker containers and Bigbrotr services. Here’s a breakdown:
 
 ```env
-# Ports
-DB_PORT=5432
-PGADMIN_PORT=8080
+# PostgreSQL and pgAdmin ports
+DB_PORT=5432          # Exposes PostgreSQL database on this port
+PGADMIN_PORT=8080     # Exposes pgAdmin web UI on this port
 
 # Nostr keypair
-SECRET_KEY=
-PUBLIC_KEY=
+SECRET_KEY=           # Your private key for signed requests
+PUBLIC_KEY=           # Your public identity on Nostr
 
-# Database configuration
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=admin
-POSTGRES_DB=bigbrotr
-POSTGRES_DB_DATA_PATH=./data
-POSTGRES_DB_INIT_PATH=./init.sql
+# PostgreSQL configuration
+POSTGRES_USER=admin                 # Username for the database
+POSTGRES_PASSWORD=admin             # Password for the database
+POSTGRES_DB=bigbrotr                # Name of the database
+POSTGRES_DB_DATA_PATH=./data        # Path to persist database data
+POSTGRES_DB_INIT_PATH=./init.sql    # Path to initial SQL setup (optional)
+POSTGRES_DB_DUMP_PATH=./dump        # Path for backup/exported dumps
 
 # pgAdmin configuration
-PGADMIN_DEFAULT_EMAIL=admin@admin.com
-PGADMIN_DEFAULT_PASSWORD=admin
+PGADMIN_DEFAULT_EMAIL=admin@admin.com      # Login email for pgAdmin
+PGADMIN_DEFAULT_PASSWORD=admin             # Login password for pgAdmin
 
-# Initializer configuration
-RELAYS_SEED_PATH=.relays_seed.txt
+# Initializer
+RELAYS_SEED_PATH=./seed/relays_seed.txt    # File containing the initial list of relays to monitor
 
-# Monitor configuration
-MONITOR_FREQUENCY_HOUR=8
-MONITOR_NUM_CORES=2
-MONITOR_CHUNK_SIZE=100
-MONITOR_REQUESTS_PER_CORE=25
-MONITOR_REQUEST_TIMEOUT=20
+# Finder service
+FINDER_FREQUENCY_HOUR=8         # How often (in hours) to run the finder service
+FINDER_REQUEST_TIMEOUT=20       # Timeout for requests made when discovering new relays
 
-# Syncronizer configuration
-SYNCRONIZER_NUM_CORES=4
-SYNCRONIZER_CHUNK_SIZE=200
-SYNCRONIZER_REQUESTS_PER_CORE=25
-SYNCRONIZER_REQUEST_TIMEOUT=20
+# Monitor service
+MONITOR_FREQUENCY_HOUR=8        # How often to run the monitoring routine
+MONITOR_NUM_CORES=8             # Number of CPU cores to use
+MONITOR_CHUNK_SIZE=50           # Number of relays monitored per core
+MONITOR_REQUESTS_PER_CORE=10    # Relay monitors made in parallel per core
+MONITOR_REQUEST_TIMEOUT=20      # Timeout for each relay monitor
+
+# Syncronizer service
+SYNCRONIZER_NUM_CORES=8             # Number of CPU cores to use
+SYNCRONIZER_CHUNK_SIZE=50           # Number of relays syncronized per core
+SYNCRONIZER_REQUESTS_PER_CORE=10    # Relay syncronizations made in parallel per core
+SYNCRONIZER_REQUEST_TIMEOUT=20      # Timeout for each relay syncronization
+SYNCTONIZER_START_TIMESTAMP=0       # Start time for sync (0 = genesis)
+SYNCRONIZER_STOP_TIMESTAMP=-1       # End time (-1 = now)
+SYNCRONIZER_EVENT_FILTER={}         # Optional event filtering as JSON
 ```
-
-- `DB_PORT`: Port on your host to expose PostgreSQL (maps to container port 5432).
-- `PGADMIN_PORT`: Port on your host to access pgAdmin (maps to container port 80).
-- `SECRET_KEY` / `PUBLIC_KEY`: Your Nostr keypair credentials.
-- `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`: Credentials and database name for PostgreSQL.
-- `POSTGRES_DB_DATA_PATH`: Local directory for persistent PostgreSQL data.
-- `POSTGRES_DB_INIT_PATH`: Optional SQL file for initializing the database.
-- `PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD`: Credentials for logging into pgAdmin.
-- `RELAYS_SEED_PATH`: Path to relays seed file used by the initializer service.
-- **Monitor and Syncronizer variables**: Configure performance and behavior of Bigbrotr's monitor and synchronizer services.
 
 ---
 
@@ -84,17 +82,18 @@ SYNCRONIZER_REQUEST_TIMEOUT=20
 Launch the full stack using Docker Compose with your `.env` file:
 
 ```bash
-docker compose --env-file .env up -d
+docker compose up -d --build
 ```
 
-✔️ This will start:
+✅ This will start:
+- `database`: the PostgreSQL backend storing all Nostr events and metadata
+- `pgadmin`: a GUI to inspect and manage the database
+- `torproxy`: enables communication with .onion relays via Tor
+- `initializer`: seeds the database with your initial relay list (runs once)
+- `finder`: scans for new relays from events and external sources
+- `monitor`: tests relay responsiveness and metadata compliance
+- `syncronizer`: fetches events from known relays and archives them
 
-- **PostgreSQL** (`bigbrotr_database`) on `${DB_PORT}` (default: `5432`)
-- **pgAdmin** (`bigbrotr_pgadmin`) accessible at [http://localhost:${PGADMIN_PORT}](http://localhost:8080)
-- **Tor proxy** (`bigbrotr_torproxy`)
-- **Initializer** (`bigbrotr_initializer`) - initializes database from seed
-- **Monitor** (`bigbrotr_monitor`) - main monitoring service
-- **Syncronizer** (`bigbrotr_syncronizer`) - synchronizes data with relays
 
 👤 *Log into pgAdmin using the email and password from your `.env`.*
 
@@ -110,7 +109,7 @@ docker compose down
 
 ---
 
-## Docker Compose Overview
+### Docker Compose Overview
 
 Here is the relevant `docker-compose.yml` snippet used:
 
@@ -174,6 +173,25 @@ services:
       - network
     restart: no
 
+  finder:
+    build:
+      context: .
+      dockerfile: dockerfiles/finder
+    container_name: bigbrotr_finder
+    environment:
+      - POSTGRES_HOST=database
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=5432
+      - FINDER_FREQUENCY_HOUR=${FINDER_FREQUENCY_HOUR}
+      - FINDER_REQUEST_TIMEOUT=${FINDER_REQUEST_TIMEOUT}
+    depends_on:
+      - database
+    networks:
+      - network
+    restart: unless-stopped
+
   monitor:
     build:
       context: .
@@ -218,6 +236,9 @@ services:
       - SYNCRONIZER_CHUNK_SIZE=${SYNCRONIZER_CHUNK_SIZE}
       - SYNCRONIZER_REQUESTS_PER_CORE=${SYNCRONIZER_REQUESTS_PER_CORE}
       - SYNCRONIZER_REQUEST_TIMEOUT=${SYNCRONIZER_REQUEST_TIMEOUT}
+      - SYNCTONIZER_START_TIMESTAMP=${SYNCTONIZER_START_TIMESTAMP}
+      - SYNCRONIZER_STOP_TIMESTAMP=${SYNCRONIZER_STOP_TIMESTAMP}
+      - SYNCRONIZER_EVENT_FILTER=${SYNCRONIZER_EVENT_FILTER}
     depends_on:
       - database
       - torproxy
